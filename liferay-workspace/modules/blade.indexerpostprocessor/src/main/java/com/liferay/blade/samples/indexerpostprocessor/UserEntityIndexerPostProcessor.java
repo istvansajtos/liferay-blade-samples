@@ -14,10 +14,15 @@
 
 package com.liferay.blade.samples.indexerpostprocessor;
 
+import com.liferay.expando.kernel.model.ExpandoTableConstants;
+import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.kernel.service.ExpandoValueLocalServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
@@ -67,6 +72,22 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 		if (_log.isInfoEnabled()) {
 			_log.info("postProcessDocument");
 		}
+
+		User userEntity = (User) obj;
+
+		long companyId = Long.parseLong(document.get(Field.COMPANY_ID));
+		String className = document.get(Field.ENTRY_CLASS_NAME);
+
+		ExpandoValue expandoValue = ExpandoValueLocalServiceUtil.getValue(
+			companyId, className, ExpandoTableConstants.DEFAULT_TABLE_NAME, PHONE_NUMBER, userEntity.getPrimaryKey());
+
+		String phoneNumber = "";
+
+		if (expandoValue != null) {
+			phoneNumber = expandoValue.getString();
+		}
+
+		document.addKeyword(PHONE_NUMBER, phoneNumber);
 	}
 
 	@Override
@@ -87,6 +108,12 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 
 		if (_log.isInfoEnabled()) {
 			_log.info("postProcessSearchQuery");
+		}
+
+		String keywords = searchContext.getKeywords();
+
+		if (keywords != null) {
+			searchQuery.addTerm(PHONE_NUMBER, keywords, true);
 		}
 	}
 
@@ -111,5 +138,6 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserEntityIndexerPostProcessor.class);
+	private static final String PHONE_NUMBER = "phoneNumber";
 
 }
