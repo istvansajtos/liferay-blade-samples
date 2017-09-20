@@ -16,12 +16,15 @@ package com.liferay.blade.samples.indexerpostprocessor;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 
@@ -67,6 +70,18 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 		if (_log.isInfoEnabled()) {
 			_log.info("postProcessDocument");
 		}
+
+		// jobTitle is indexed out-of-the-box too
+		/*User userEntity = (User) document;
+
+		String jobTitle = "";
+
+		try {
+			jobTitle = userEntity.getJobTitle();
+		} catch (Exception e) {}
+			if(jobTitle.length() > 0)
+				document.addText(Field.TITLE, jobTitle);
+		}*/
 	}
 
 	@Override
@@ -97,6 +112,12 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 
 		if (_log.isInfoEnabled()) {
 			_log.info("postProcessSearchQuery");
+		}
+
+		String keywords = searchContext.getKeywords();
+
+		if (Validator.isNotNull(keywords)) {
+			searchQuery.addExactTerm("jobTitle", keywords);
 		}
 	}
 
