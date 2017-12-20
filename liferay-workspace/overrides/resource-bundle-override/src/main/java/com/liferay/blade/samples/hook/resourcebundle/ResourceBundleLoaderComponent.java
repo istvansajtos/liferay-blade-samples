@@ -32,20 +32,20 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"bundle.symbolic.name=com.liferay.blogs.web",
+		"bundle.symbolic.name=com.liferay.frontend.js.spa.web",
 		"resource.bundle.base.name=content.Language",
-		"servlet.context.name=blogs-web"
+		"servlet.context.name=frontend-js-spa-web"
 	}
 )
 public class ResourceBundleLoaderComponent implements ResourceBundleLoader {
 
 	@Override
-	public ResourceBundle loadResourceBundle(String languageId) {
-		return _resourceBundleLoader.loadResourceBundle(languageId);
+	public ResourceBundle loadResourceBundle(String locale) {
+		return _resourceBundleLoader.loadResourceBundle(locale);
 	}
 
 	@Reference(
-		target = "(&(bundle.symbolic.name=com.liferay.blogs.web)(!(component.name=com.liferay.blade.samples.hook.resourcebundle.ResourceBundleLoaderComponent)))"
+		target = "(&(bundle.symbolic.name=com.liferay.frontend.js.spa.web)(!(component.name=com.liferay.blade.samples.hook.resourcebundle.ResourceBundleLoaderComponent)))"
 	)
 	public void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
