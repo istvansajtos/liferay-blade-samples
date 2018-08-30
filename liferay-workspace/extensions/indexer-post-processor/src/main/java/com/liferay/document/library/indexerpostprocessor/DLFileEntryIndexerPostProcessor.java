@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package com.liferay.blade.samples.indexerpostprocessor;
+package com.liferay.document.library.indexerpostprocessor;
 
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 
@@ -29,25 +37,20 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.log.LogService;
 
-/**
- * @author Liferay
- */
 @Component(
 	immediate = true,
 	property = {
-		"indexer.class.name=com.liferay.portal.kernel.model.User",
-		"indexer.class.name=com.liferay.portal.kernel.model.UserGroup"
+		"indexer.class.name=com.liferay.document.library.kernel.model.DLFileEntry"
 	},
 	service = IndexerPostProcessor.class
 )
-public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
+public class DLFileEntryIndexerPostProcessor implements IndexerPostProcessor {
 
 	@Override
 	public void postProcessContextBooleanFilter(
 			BooleanFilter booleanFilter, SearchContext searchContext)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessContextBooleanFilter");
 	}
 
 	@Override
@@ -55,14 +58,21 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 			BooleanQuery contextQuery, SearchContext searchContext)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessContextQuery");
 	}
 
 	@Override
 	public void postProcessDocument(Document document, Object obj)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessDocument");
+		DLFileEntry dlFileEntry = (DLFileEntry)obj;
+
+		Locale defaultLocale = PortalUtil.getSiteDefaultLocale(dlFileEntry.getGroupId());
+
+		String localizedField = LocalizationUtil.getLocalizedName(Field.CONTENT, defaultLocale.toString());
+
+		Field localizedContentField = document.getField(localizedField);
+
+		document.addText(Field.CONTENT, localizedContentField.getValue());
 	}
 
 	@Override
@@ -70,7 +80,6 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 			BooleanQuery fullQuery, SearchContext searchContext)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessFullQuery");
 	}
 
 	@Override
@@ -79,7 +88,6 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 			SearchContext searchContext)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessSearchQuery");
 	}
 
 	@Override
@@ -87,17 +95,19 @@ public class UserEntityIndexerPostProcessor implements IndexerPostProcessor {
 			BooleanQuery searchQuery, SearchContext searchContext)
 		throws Exception {
 
-		_log.log(LogService.LOG_INFO, "postProcessSearchQuery");
 	}
 
 	@Override
 	public void postProcessSummary(
 		Summary summary, Document document, Locale locale, String snippet) {
 
-		_log.log(LogService.LOG_INFO, "postProcessSummary");
-	}
+		if (Validator.isBlank(summary.getContent())) {
+			String prefix = Field.SNIPPET + StringPool.UNDERLINE;
 
-	@Reference
-	private LogService _log;
+			String content = document.get(prefix + Field.CONTENT, Field.CONTENT);
+	
+			summary.setContent(content);
+		}
+	}
 
 }
